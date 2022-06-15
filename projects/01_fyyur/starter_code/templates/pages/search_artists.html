@@ -1,6 +1,13 @@
 {% extends 'layouts/main.html' %}
 {% block title %}Fyyur | Artists Search{% endblock %}
 {% block content %}
+<form action="/artists/search" method="post">
+	<div class="form-group">
+		<label for="name">SEARCH ARTISTS</label>
+		{{ form.search_term(class_ = 'form-control', autofocus = true) }}
+	</div>
+	<input type="submit" value="SEARCH" class="btn btn-primary btn-lg btn-outline-success">
+</form>
 <h3>Number of search results for "{{ search_term }}": {{ results.count }}</h3>
 <ul class="items">
 	{% for artist in results.data %}
@@ -9,6 +16,7 @@
 			<i class="fas fa-users"></i>
 			<div class="item">
 				<h5>{{ artist.name }}</h5>
+				<h6><span>Number of upcoming shows: </span>{{ artist.num_upcoming_shows }}</h6>
 			</div>
 		</a>
 	</li>

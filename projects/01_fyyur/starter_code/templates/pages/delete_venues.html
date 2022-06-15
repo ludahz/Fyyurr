@@ -1,0 +1,9 @@
+{% extends 'layouts/main.html' %}
+{% block title %}Fyyur | DELETE VENUE{% endblock %}
+{% block content %}
+<h3>"Confrim you want to delete record {{venue.name}}"</h3>
+<form class="form" method="get" action="/venues/{{venue.id}}/delete">
+    <input type='submit' class="btn btn-danger btn-lg" value="Delete Venue">
+</form>
+
+{% endblock %}
