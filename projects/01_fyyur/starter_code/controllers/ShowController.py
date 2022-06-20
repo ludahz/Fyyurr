@@ -1,7 +1,14 @@
 import sys
-from flask import render_template, redirect, url_for, request, abort, flash
+from flask import (
+    render_template,
+    flash
+)
 from forms import *
-from models.Models import Artist, Show, Venue
+from models.Models import (
+    Artist,
+    Show,
+    Venue
+)
 from manage import db
 
 #  Shows
@@ -10,8 +17,6 @@ from manage import db
 
 
 def shows():
-    # displays list of shows at /shows
-    # TODO: replace with real venues data.
     dataList = Show.query.all()
     show_data = []
     data = []
@@ -39,8 +44,6 @@ def create_shows():
 
 # @app.route('/shows/create', methods=['POST'])
 def create_show_submission():
-    # called to create new shows in the db, upon submitting new show listing form
-    # TODO: insert form data as a new Show record in the db, instead
     form = ShowForm()
     try:
         show = Show(
@@ -50,7 +53,6 @@ def create_show_submission():
         )
         db.session.add(show)
         db.session.commit()
-        # on successful db insert, flash success
         flash('Show was successfully listed!')
     except:
         db.session.rollback()
@@ -58,8 +60,4 @@ def create_show_submission():
         flash('An error occurred. Show could not be listed.')
     finally:
         db.session.close()
-
-    # TODO: on unsuccessful db insert, flash an error instead.
-    # e.g., flash('An error occurred. Show could not be listed.')
-    # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
     return render_template('pages/home.html')

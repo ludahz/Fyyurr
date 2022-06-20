@@ -1,6 +1,10 @@
 from flask import Blueprint
 
-from controllers.ShowController import create_show_submission, create_shows, shows
+from controllers.ShowController import (
+    create_show_submission,
+    create_shows,
+    shows
+)
 
 show_bp = Blueprint('show_bp', __name__)
 

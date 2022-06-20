@@ -1,148 +1,139 @@
 import re
 import sys
-from unicodedata import name
-from flask import render_template, redirect, url_for, request, abort, flash
+from urllib import response
+from flask import (
+    render_template,
+    redirect,
+    url_for,
+    request,
+    flash
+)
 from sqlalchemy import true
 from forms import *
-from models.Models import Artist, Show, Venue
+from models.Models import (
+    Artist,
+    Show,
+    Venue
+)
 from manage import db
 
 
 #  Venues
 #  ----------------------------------------------------------------
 
+
 # @app.route('/venues')
-
-
 def venues():
-    # TODO: replace with real venues data.
-    #       num_upcoming_shows should be aggregated based on number of upcoming shows per venue.
     venue_cities = Venue.query.distinct(Venue.city, Venue.state).all()
     data = []
     temp = []
     append_by_city = []
     append_by_venues = []
-    count = []
     form = SearchFrom()
     for venue_city in venue_cities:
         temp = {
             'city': venue_city.city,
             'state': venue_city.state,
         }
+        upcoming_shows_query = db.session.query(Show).join(Venue).filter(
+            Show.venue_id == venue_city.id).filter(Show.start_time > datetime.now()).all()
         venues_results = Venue.query.filter_by(
             city=venue_city.city, state=venue_city.state).all()
-        shows = Show.query.filter_by(venue_id=venue_city.id)
-        for show in shows:
-            if show.start_time > datetime.now():
-                count.append(show)
-            else:
-                pass
-        for venues_res in venues_results:
+        for results in venues_results:
             append_by_city = {
-                "id": venues_res.id,
-                "name": venues_res.name,
-                "num_upcoming_shows": len(count)
+                "id": results.id,
+                "name": results.name,
+                "num_upcoming_shows": len(upcoming_shows_query)
             }
             append_by_venues.append(append_by_city)
+            upcoming_shows_query = []
         temp['venues'] = append_by_venues
         append_by_venues = []
         data.append(temp)
-        count = []
     return render_template('pages/venues.html', areas=data, form=form)
 
 #  Create Venue
 #  ----------------------------------------------------------------
 
+
 # @app.route('/venues/create', methods=['GET'])
-
-
 def create_venue_form():
     form = VenueForm()
     return render_template('forms/new_venue.html', form=form)
 
+
 # @app.route('/venues/create', methods=['POST'])
-
-
 def create_venue_submission():
-    # TODO: insert form data as a new Venue record in the db, instead
-    # TODO: modify data to be the data object returned from db insertion
     form = VenueForm()
     error = False
-    try:
-        venue = Venue(
-            name=form['name'].data,
-            city=form['city'].data,
-            state=form['state'].data,
-            address=form['address'].data,
-            phone=form['phone'].data,
-            genres=form['genres'].data,
-            facebook_link=form['facebook_link'].data,
-            image_link=form['image_link'].data,
-            website_link=form['website_link'].data,
-            seeking_talent=form['seeking_talent'].data,
-            seeking_description=form['seeking_description'].data
-        )
-        db.session.add(venue)
-        db.session.commit()
-        # on successful db insert, flash success
-        flash('Venue ' + request.form['name'] + ' was successfully listed!')
-    except:
-        error = True
-        db.session.rollback()
-        print(sys.exc_info())
-        # TODO: on unsuccessful db insert, flash an error instead.
-        flash('An error occurred. Venue ' +
-              request.form['name'] + ' could not be listed.')
-        # see: http://flask.pocoo.org/docs/1.0/patterns/flashing/
-    finally:
-        db.session.close()
-    if error:
-        print('Error!!!')
+    if form.validate():
+        try:
+            venue = Venue(
+                name=form['name'].data,
+                city=form['city'].data,
+                state=form['state'].data,
+                address=form['address'].data,
+                phone=form['phone'].data,
+                genres=form['genres'].data,
+                facebook_link=form['facebook_link'].data,
+                image_link=form['image_link'].data,
+                website_link=form['website_link'].data,
+                seeking_talent=form['seeking_talent'].data,
+                seeking_description=form['seeking_description'].data
+            )
+            db.session.add(venue)
+            db.session.commit()
+            flash('Venue ' + request.form['name'] +
+                  ' was successfully listed!')
+        except:
+            error = True
+            db.session.rollback()
+            print(sys.exc_info())
+            flash('An error occurred. Venue ' +
+                  request.form['name'] + ' could not be listed.')
+        finally:
+            db.session.close()
     else:
-        print('All good')
+        print(form.errors.items())
+        return render_template('forms/new_venue.html', form=form)
 
     return render_template('pages/home.html')
+
 
 # @app.route('/venues/<int:venue_id>')
 
 
 def show_venue(venue_id):
-    # shows the venue page with the given venue_id
-    # TODO: replace with real venue data from the venues table, using venue_id
     venue_obj_result = Venue.query.get(venue_id)
-    count_past = []
-    count_upcoming = []
-    upcoming_show = []
     upcoming_shows = []
-    past_show = []
     past_shows = []
-    shows = Show.query.filter_by(venue_id=venue_id)
-    for show in shows:
-        artist = Artist.query.get(show.artist_id)
-        if show.start_time > datetime.now():
-            count_upcoming.append(show)
-            upcoming_show = {
-                "artist_id": artist.id,
-                "artist_name": artist.name,
-                "artist_image_link": artist.image_link,
-                "start_time": show.start_time
-            }
-            upcoming_shows.append(upcoming_show)
-        else:
-            count_past.append(show)
-            past_show = {
-                "artist_id": artist.id,
-                "artist_name": artist.name,
-                "artist_image_link": artist.image_link,
-                "start_time": show.start_time
-            }
-            past_shows.append(past_show)
+    upcoming_shows_query = db.session.query(Show).join(Artist).filter(
+        Show.venue_id == venue_id).filter(Show.start_time > datetime.now()).all()
+    for query in upcoming_shows_query:
+        artist = Artist.query.get(query.artist_id)
+        upcoming_shows.append({
+            "artist_id": artist.id,
+            "artist_name": artist.name,
+            "artist_image_link": artist.image_link,
+            "start_time": query.start_time
+        })
+
+    past_shows_query = db.session.query(Show).join(Artist).filter(
+        Show.venue_id == venue_id).filter(Show.start_time < datetime.now()).all()
+    for query in past_shows_query:
+        artist = Artist.query.get(query.artist_id)
+        past_shows.append({
+            "artist_id": artist.id,
+            "artist_name": artist.name,
+            "artist_image_link": artist.image_link,
+            "start_time": query.start_time
+        })
 
     data = vars(venue_obj_result)
     data['past_shows'] = past_shows
     data['upcoming_shows'] = upcoming_shows
-    data['past_shows_count'] = len(count_past)
-    data['upcoming_shows_count'] = len(count_upcoming)
+    data['past_shows_count'] = len(past_shows_query)
+    data['upcoming_shows_count'] = len(upcoming_shows_query)
     # data = list(filter(lambda d: d['id'] ==
     #             venue_id, [data1, data2, data3]))[0]
     return render_template('pages/show_venue.html', venue=data)
@@ -153,11 +144,7 @@ def show_venue(venue_id):
 
 
 # @app.route('/venues/<venue_id>', methods=['DELETE'])
-
-
 def delete_venue(venue_id):
-    # TODO: Complete this endpoint for taking a venue_id, and using
-    # SQLAlchemy ORM to delete a record. Handle cases where the session commit could fail.
     try:
         record_to_delete = Venue.query.get_or_404(venue_id)
         db.session.delete(record_to_delete)
@@ -173,18 +160,14 @@ def delete_venue(venue_id):
         db.session.close()
     return render_template('pages/home.html')
 
-    # BONUS CHALLENGE: Implement a button to delete a Venue on a Venue Page, have it so that
-    # clicking that button delete it from the db then redirect the user to the homepage
-
-    #  EDIT Venue
-    #  ----------------------------------------------------------------
-    # @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
+#  EDIT Venue
+#  ----------------------------------------------------------------
 
 
+# @app.route('/venues/<int:venue_id>/edit', methods=['GET'])
 def edit_venue(venue_id):
     form = VenueForm()
     venue = Venue.query.get(venue_id)
-    # TODO: populate form with values from venue with ID <venue_id>
     form['name'].data = venue.name
     form['city'].data = venue.city
     form['state'].data = venue.state
@@ -201,8 +184,6 @@ def edit_venue(venue_id):
 
 # @app.route('/venues/<int:venue_id>/edit', methods=['POST'])
 def edit_venue_submission(venue_id):
-    # TODO: take values from the form submitted, and update existing
-    # venue record with ID <venue_id> using the new attributes
     venue = Venue.query.get_or_404(venue_id)
     form = VenueForm()
     venue.name = form['name'].data
@@ -232,37 +213,23 @@ def edit_venue_submission(venue_id):
 #  SEARCH Venue
 #  ----------------------------------------------------------------
 
+
 # @app.route('/venues/search', methods=['POST'])
-
-
 def search_venues():
-    # TODO: implement search on venues with partial string search. Ensure it is case-insensitive.
-    # seach for Hop should return "The Musical Hop".
-    # search for "Music" should return "The Musical Hop" and "Park Square Live Music & Coffee"
     form = SearchFrom()
     search = form.search_term.data
     venues = Venue.query.all()
     response = {}
     data = []
-    count = []
-    count_shows = []
     for venue in venues:
-        # if str(search).lower() in venue.name.lower():
-        # or using regex
         if re.search(str(search).lower(), venue.name.lower()):
-            shows = Show.query.filter_by(venue_id=venue.id)
-            for show in shows:
-                if show.start_time > datetime.now():
-                    count_shows.append(show)
-            else:
-                pass
-            count.append(venue)
-            response['count'] = len(count)
+            upcoming_shows_query = db.session.query(Show).join(Venue).filter(
+                Show.venue_id == venue.id).filter(Show.start_time > datetime.now()).all()
             data.append({
                 "id": venue.id,
                 "name": venue.name,
-                "num_upcoming_shows": len(count_shows)
+                "num_upcoming_shows": len(upcoming_shows_query),
             })
-            response['data'] = data
-            count_shows = []
+        response['count'] = len(data)
+        response['data'] = data
     return render_template('pages/search_venues.html', form=form, results=response, search_term=request.form.get('search_term', ''))

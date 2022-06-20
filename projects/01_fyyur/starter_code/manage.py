@@ -3,13 +3,13 @@ from flask import Flask
 from flask_script import Manager
 from flask_sqlalchemy import SQLAlchemy
 from filters import format_datetime
+from flask_wtf.csrf import CSRFProtect
 
 from flask_migrate import Migrate, MigrateCommand
 
-# from app import app
-
 app = Flask(__name__)
 app.config.from_object('config')
+CSRFProtect(app)
 db = SQLAlchemy(app)
 
 migrate = Migrate(app, db)

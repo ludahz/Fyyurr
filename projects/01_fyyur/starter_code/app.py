@@ -1,12 +1,10 @@
 #----------------------------------------------------------------------------#
 # Imports
 #----------------------------------------------------------------------------#
-from flask import Flask, render_template
-from flask_sqlalchemy import SQLAlchemy
+from flask import render_template
 import logging
 from logging import Formatter, FileHandler
 from forms import *
-from flask_migrate import Migrate
 # from flask_moment import Moment
 
 from routes.venue_bp import venue_bp
@@ -16,11 +14,7 @@ from manage import app
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
-# app = Flask(__name__)
 # moment = Moment(app)
-# TODO: connect to a local postgresql database
-# app.config.from_object('config')
-# db = SQLAlchemy(app)
 
 app.register_blueprint(venue_bp, url_prefix='/venues')
 app.register_blueprint(artist_bp, url_prefix='/artists')

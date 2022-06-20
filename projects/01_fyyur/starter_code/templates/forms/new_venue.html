@@ -3,6 +3,7 @@
 {% block content %}
   <div class="form-wrapper">
     <form method="post" class="form" action="/venues/create">
+      {{ form.csrf_token }}
       <h3 class="form-heading">List a new venue <a href="{{ url_for('index') }}" title="Back to homepage"><i class="fa fa-home pull-right"></i></a></h3>
       <div class="form-group">
         <label for="name">Name</label>
@@ -26,6 +27,13 @@
       <div class="form-group">
           <label for="phone">Phone</label>
           {{ form.phone(class_ = 'form-control', placeholder='xxx-xxx-xxxx', autofocus = true) }}
+          {% for field, errors in form.errors.items() %}
+          {% if field == 'phone' %}
+          <small class="form-text text-muted " style="color:red">
+                {{ ', '.join(errors) }}
+              </small>
+              {% endif %}
+        {% endfor %}
         </div>
       <div class="form-group">
         <label for="genres">Genres</label>
@@ -36,6 +44,13 @@
       <div class="form-group">
           <label for="facebook_link">Facebook Link</label>
           {{ form.facebook_link(class_ = 'form-control', placeholder='http://', autofocus = true) }}
+          {% for field, errors in form.errors.items() %}
+          {% if field == 'facebook_link' %}
+            <small class="form-text text-muted " style="color:red">
+                {{ ', '.join(errors) }}
+              </small>
+              {% endif %}
+          {% endfor %}
        </div>
       
        <div class="form-group">
@@ -46,6 +61,13 @@
        <div class="form-group">
             <label for="website_link">Website Link</label>
             {{ form.website_link(class_ = 'form-control', placeholder='http://', autofocus = true) }}
+            {{ form.website_link(class_ = 'form-control', placeholder='http://', autofocus = true) }}
+            {% for field, errors in form.errors.items() %}
+            {% if field == 'website_link' %}
+            <small class="form-text text-muted " style="color:red">
+                {{ ', '.join(errors) }}
+              </small>
+              {% endif %}
        </div>
 
        <div class="form-group">

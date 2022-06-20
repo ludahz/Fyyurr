@@ -1,7 +1,13 @@
-from crypt import methods
 from flask import Blueprint
-
-from controllers.ArtistController import artists, create_artist_form, create_artist_submission, edit_artist, edit_artist_submission, search_artists, show_artist
+from controllers.ArtistController import (
+    artists,
+    create_artist_form,
+    create_artist_submission,
+    edit_artist,
+    edit_artist_submission,
+    search_artists,
+    show_artist
+)
 
 
 artist_bp = Blueprint('artist_bp', __name__)
